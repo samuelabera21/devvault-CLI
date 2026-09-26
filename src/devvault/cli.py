@@ -29,9 +29,7 @@ def validate_key(key):
         raise ValueError("Configuration key cannot be empty.")
 
     if not (key[0].isalpha() or key[0] == "_"):
-        raise ValueError(
-            "Configuration key must start with a letter or underscore."
-        )
+        raise ValueError("Configuration key must start with a letter or underscore.")
 
     if not key.replace("_", "").isalnum():
         raise ValueError(
@@ -117,10 +115,10 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-    "--version",
-    action="version",
-    version="DevVault 0.1.0",
-)
+        "--version",
+        action="version",
+        version="DevVault 0.1.0",
+    )
 
     subparsers = parser.add_subparsers(dest="command")
 
