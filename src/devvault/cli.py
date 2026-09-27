@@ -1,21 +1,19 @@
 import argparse
 from pathlib import Path
 
-from devvault.config import get_config, list_config, remove_config, set_config
+from devvault.config import (
+    get_config,
+    initialize_config,
+    list_config,
+    remove_config,
+    set_config,
+)
 from devvault.exceptions import ConfigKeyNotFoundError
-from devvault.storage import get_config_file, load_config, save_config
+from devvault.storage import get_config_file, load_config
 
 
 def init_command():
-    config_file = get_config_file()
-
-    if config_file.exists():
-        print("Error: DevVault is already initialized.")
-        return
-
-    config_file.parent.mkdir(exist_ok=True)
-    save_config({})
-
+    initialize_config()
     print("DevVault initialized.")
 
 

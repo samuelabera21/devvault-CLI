@@ -2,6 +2,7 @@ import pytest
 
 from devvault.config import (
     get_config,
+    initialize_config,
     list_config,
     remove_config,
     set_config,
@@ -59,3 +60,11 @@ def test_remove_config(tmp_path):
 
     assert removed is True
     assert get_config("DEBUG", config_file) is True
+
+
+def test_initialize_config(tmp_path):
+    config_file = tmp_path / "config.json"
+
+    initialize_config(config_file)
+
+    assert config_file.exists()
