@@ -6,16 +6,25 @@ build-backend = "setuptools.build_meta"
 name = "devvault"
 version = "0.1.0"
 description = "A local developer configuration manager"
+authors = [
+    { name = "Samuel Abera" },
+]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/samuelabera21/devvault"
+Repository = "https://github.com/samuelabera21/devvault"
+Issues = "https://github.com/samuelabera21/devvault/issues"
 
 [project.optional-dependencies]
 dev = [
     "pytest",
     "ruff",
     "mypy",
-]   
+    "build",
+]
 
 [project.scripts]
 devvault = "devvault.cli:main"
