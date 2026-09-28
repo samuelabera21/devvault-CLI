@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "devvault"
+name = "samuel-devvault"
 version = "0.1.1"
 description = "A local developer configuration manager"
 authors = [
