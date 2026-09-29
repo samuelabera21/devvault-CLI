@@ -115,7 +115,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version="DevVault 0.1.1",
+        version="DevVault 0.1.2",
     )
 
     subparsers = parser.add_subparsers(dest="command")
