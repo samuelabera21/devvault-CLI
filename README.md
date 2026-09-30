@@ -1,4 +1,3 @@
-````markdown
 # DevVault
 
 DevVault is a local command-line tool for managing developer configuration values.
@@ -8,15 +7,16 @@ It is a learning project focused on practicing modern Python project development
 ## Features
 
 - Initialize a local DevVault configuration
-- Set configuration values
+- Organize configuration using **Environments / Profiles** (`default`, `dev`, `staging`, `production`, etc.)
+- Set configuration values (per-profile or in active profile)
 - Get configuration values
 - List configuration keys
 - Remove configuration values
 - Export configuration to a `.env` file
-- Display project information
+- Display project and profile information
 - Display the application version
 - Command-line help
-- JSON-based local storage
+- JSON-based local storage with backward compatibility
 - Automated tests with pytest
 - Code quality checks with Ruff
 - Static type checking with mypy
@@ -33,7 +33,7 @@ Clone the repository:
 ```bash
 git clone <repository-url>
 cd devvault
-````
+```
 
 Create a virtual environment:
 
@@ -49,7 +49,7 @@ Activate the virtual environment.
 .\.venv\Scripts\Activate.ps1
 ```
 
-### Windows Git Bash
+### Windows Git Bash / POSIX
 
 ```bash
 source .venv/Scripts/activate
@@ -77,110 +77,136 @@ DevVault stores its configuration in:
 ~/.devvault/config.json
 ```
 
-### Set a configuration value
+### Configuration Profiles
+
+DevVault supports managing configuration across multiple isolated profiles (such as `dev`, `staging`, and `production`).
+
+#### List profiles
+
+```bash
+devvault profile list
+```
+
+Output:
+```text
+* default
+  dev
+  staging
+```
+
+#### Create a profile
+
+```bash
+devvault profile create dev
+devvault profile create staging
+```
+
+#### Show active profile
+
+```bash
+devvault profile current
+```
+
+#### Switch active profile
+
+```bash
+devvault profile use dev
+```
+
+#### Delete a profile
+
+```bash
+devvault profile delete staging
+```
+
+> **Note:** To prevent accidental data loss, DevVault safely prevents deleting the currently active profile.
+
+---
+
+### Configuration Management
+
+#### Set a configuration value
+
+Set a value in the currently active profile:
 
 ```bash
 devvault set DATABASE_URL "postgresql://localhost/myapp"
 ```
 
-Boolean values are supported:
+Set a value in a specific profile without switching:
 
 ```bash
-devvault set DEBUG true
+devvault set DATABASE_URL "postgresql://staging-db/myapp" --profile staging
 ```
 
-Integer values are supported:
+Supported value types:
+- **Boolean:** `devvault set DEBUG true`
+- **Integer:** `devvault set PORT 8000`
+- **Float:** `devvault set TIMEOUT 2.5`
+- **String:** `devvault set APP_NAME "MyApp"`
 
-```bash
-devvault set PORT 8000
-```
-
-Floating-point values are supported:
-
-```bash
-devvault set TIMEOUT 2.5
-```
-
-### Get a configuration value
+#### Get a configuration value
 
 ```bash
 devvault get DATABASE_URL
+devvault get DATABASE_URL --profile staging
 ```
 
-Example:
-
-```text
-postgresql://localhost/myapp
-```
-
-### List configuration keys
+#### List configuration keys
 
 ```bash
 devvault list
+devvault list --profile staging
 ```
 
-DevVault lists the configuration keys without displaying their values.
-
-Example:
-
-```text
-DATABASE_URL
-DEBUG
-PORT
-TIMEOUT
-```
-
-### Remove a configuration value
+#### Remove a configuration value
 
 ```bash
 devvault remove DEBUG
+devvault remove DEBUG --profile staging
 ```
 
-### Export configuration
+#### Export configuration
 
-Export the configuration to a `.env` file:
+Export configuration to a `.env` file:
 
 ```bash
 devvault export .env
+devvault export .env.staging --profile staging
 ```
 
-DevVault does not silently overwrite an existing file.
-
-To explicitly allow overwriting:
+To overwrite an existing file:
 
 ```bash
 devvault export .env --force
 ```
 
-### Display project information
+#### Display project information
 
 ```bash
 devvault info
+devvault info --profile staging
 ```
 
-### Display help
+#### Display help
 
 ```bash
 devvault --help
-```
-
-You can also get help for individual commands:
-
-```bash
+devvault profile --help
 devvault set --help
 devvault get --help
 devvault export --help
 ```
 
-### Display the version
+#### Display the version
 
 ```bash
 devvault --version
 ```
 
-## Development
+## Project Structure
 
-DevVault uses a `src` project layout:
+DevVault uses a standard `src` project layout:
 
 ```text
 devvault/
@@ -189,13 +215,19 @@ devvault/
 ├── src/
 │   └── devvault/
 │       ├── __init__.py
+│       ├── __main__.py
 │       ├── cli.py
 │       ├── config.py
+│       ├── profiles.py
 │       ├── storage.py
 │       └── exceptions.py
 └── tests/
-    └── test_config.py
+    ├── test_cli.py
+    ├── test_config.py
+    └── test_profiles.py
 ```
+
+## Development & Quality Checks
 
 ### Run tests
 
@@ -213,16 +245,10 @@ Check the code for linting problems:
 ruff check .
 ```
 
-Check whether files are correctly formatted:
-
-```bash
-ruff format --check .
-```
-
 Format the project:
 
 ```bash
-ruff format .
+ruff format --check .
 ```
 
 ### Run mypy
@@ -233,37 +259,34 @@ Run static type checking:
 mypy src
 ```
 
-## Testing
-
-DevVault uses `pytest` for automated testing.
-
-The tests currently cover configuration behavior such as:
-
-* Setting configuration values
-* Getting configuration values
-* Handling missing configuration keys
-* Listing configuration keys
-* Removing configuration values
-
-Tests use temporary files so they do not modify the user's real DevVault configuration.
-
 ## Configuration Storage
 
-DevVault currently stores configuration locally as JSON:
+DevVault stores configuration locally as JSON:
 
 ```text
 ~/.devvault/config.json
 ```
 
-Example:
+Example structure:
 
 ```json
 {
-    "DATABASE_URL": "postgresql://localhost/myapp",
-    "DEBUG": true,
-    "PORT": 8000
+    "active_profile": "default",
+    "profiles": {
+        "default": {
+            "DATABASE_URL": "postgresql://localhost/myapp",
+            "DEBUG": true,
+            "PORT": 8000
+        },
+        "staging": {
+            "DATABASE_URL": "postgresql://staging-db/myapp",
+            "PORT": 8000
+        }
+    }
 }
 ```
+
+DevVault automatically normalizes legacy flat configuration files on load without data loss.
 
 ## Security Note
 
@@ -272,30 +295,3 @@ DevVault is currently a local learning project and is **not intended to be a pro
 Configuration values are stored in a local JSON file. Do not use DevVault to store highly sensitive production credentials or secrets.
 
 When listing configuration, DevVault displays keys rather than their values.
-
-## Project Status
-
-DevVault is currently under active development.
-
-The project is being built incrementally to practice modern Python software engineering concepts, including:
-
-* Python project structure
-* CLI development
-* Configuration management
-* File and JSON storage
-* Error handling
-* Testing
-* Type checking
-* Code formatting
-* Linting
-* Packaging
-* Git-based development workflows
-
-Additional functionality will be introduced as the project develops.
-
-## License
-
-License information will be added later.
-
-```
-```

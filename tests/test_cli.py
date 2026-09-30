@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from devvault import cli
 
 
@@ -35,51 +37,70 @@ def test_validate_key_invalid():
 def test_set_command(monkeypatch, capsys):
     saved = {}
 
-    def fake_set_config(key, value):
-        saved[key] = value
+    def fake_set_config(key, value, profile=None):
+        saved[(key, profile)] = value
 
     monkeypatch.setattr(cli, "set_config", fake_set_config)
 
     cli.set_command("DEBUG", "true")
-
-    assert saved["DEBUG"] is True
+    assert saved[("DEBUG", None)] is True
     assert capsys.readouterr().out == "Saved DEBUG.\n"
+
+    cli.set_command("PORT", "8000", profile="dev")
+    assert saved[("PORT", "dev")] == 8000
+    assert capsys.readouterr().out == "Saved PORT.\n"
 
 
 def test_get_command(monkeypatch, capsys):
-    monkeypatch.setattr(cli, "get_config", lambda key: "Samuel")
+    monkeypatch.setattr(cli, "get_config", lambda key, profile=None: "Samuel")
 
     cli.get_command("NAME")
+    assert capsys.readouterr().out == "Samuel\n"
 
+    cli.get_command("NAME", profile="staging")
     assert capsys.readouterr().out == "Samuel\n"
 
 
 def test_get_command_missing_key(monkeypatch, capsys):
     from devvault.exceptions import ConfigKeyNotFoundError
 
-    def fake_get_config(key):
+    def fake_get_config(key, profile=None):
         raise ConfigKeyNotFoundError(f"Key '{key}' not found.")
 
     monkeypatch.setattr(cli, "get_config", fake_get_config)
 
     cli.get_command("NAME")
-
     assert capsys.readouterr().out == "Error: Key 'NAME' not found.\n"
 
 
+def test_list_command(monkeypatch, capsys):
+    monkeypatch.setattr(
+        cli,
+        "list_config",
+        lambda profile=None: ["KEY1", "KEY2"] if profile == "dev" else ["DEFAULT_KEY"],
+    )
+
+    cli.list_command()
+    assert capsys.readouterr().out == "DEFAULT_KEY\n"
+
+    cli.list_command(profile="dev")
+    assert capsys.readouterr().out == "KEY1\nKEY2\n"
+
+
 def test_remove_command(monkeypatch, capsys):
-    monkeypatch.setattr(cli, "remove_config", lambda key: True)
+    monkeypatch.setattr(cli, "remove_config", lambda key, profile=None: True)
 
     cli.remove_command("DEBUG")
+    assert capsys.readouterr().out == "Removed DEBUG.\n"
 
+    cli.remove_command("DEBUG", profile="dev")
     assert capsys.readouterr().out == "Removed DEBUG.\n"
 
 
 def test_remove_command_missing_key(monkeypatch, capsys):
-    monkeypatch.setattr(cli, "remove_config", lambda key: False)
+    monkeypatch.setattr(cli, "remove_config", lambda key, profile=None: False)
 
     cli.remove_command("DEBUG")
-
     assert capsys.readouterr().out == "Key 'DEBUG' not found.\n"
 
 
@@ -89,10 +110,80 @@ def test_export_command(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "load_config",
-        lambda: {"NAME": "Samuel", "DEBUG": True},
+        lambda: {
+            "active_profile": "default",
+            "profiles": {
+                "default": {"NAME": "Samuel", "DEBUG": True},
+                "dev": {"DB_HOST": "localhost"},
+            },
+        },
     )
 
     cli.export_command(output_file, False)
-
-    assert output_file.read_text() == "NAME=Samuel\nDEBUG=True\n"
+    assert output_file.read_text(encoding="utf-8") == "NAME=Samuel\nDEBUG=True\n"
     assert capsys.readouterr().out == f"Exported configuration to {output_file}.\n"
+
+    dev_output_file = tmp_path / "dev.env"
+    cli.export_command(dev_output_file, False, profile="dev")
+    assert dev_output_file.read_text(encoding="utf-8") == "DB_HOST=localhost\n"
+    assert capsys.readouterr().out == f"Exported configuration to {dev_output_file}.\n"
+
+
+def test_info_command(monkeypatch, capsys):
+    monkeypatch.setattr(
+        cli,
+        "get_config_file",
+        lambda: Path("/home/user/.devvault/config.json"),
+    )
+    monkeypatch.setattr(
+        cli,
+        "load_config",
+        lambda: {
+            "active_profile": "default",
+            "profiles": {
+                "default": {"KEY1": "VAL1"},
+                "dev": {"KEY2": "VAL2", "KEY3": "VAL3"},
+            },
+        },
+    )
+
+    cli.info_command()
+    output = capsys.readouterr().out
+    assert "Active profile: default" in output
+    assert "Total profiles: 2" in output
+    assert "Entries: 1" in output
+
+    cli.info_command(profile="dev")
+    output_dev = capsys.readouterr().out
+    assert "Entries: 2" in output_dev
+
+
+def test_profile_cli_commands(monkeypatch, capsys):
+    monkeypatch.setattr(cli, "get_active_profile", lambda: "default")
+    monkeypatch.setattr(cli, "list_profiles", lambda: ["default", "dev"])
+
+    cli.profile_list_command()
+    out = capsys.readouterr().out
+    assert "* default\n  dev\n" == out
+
+    cli.profile_current_command()
+    assert capsys.readouterr().out == "default\n"
+
+    created = []
+    deleted = []
+    switched = []
+    monkeypatch.setattr(cli, "create_profile", lambda name: created.append(name))
+    monkeypatch.setattr(cli, "delete_profile", lambda name: deleted.append(name))
+    monkeypatch.setattr(cli, "set_active_profile", lambda name: switched.append(name))
+
+    cli.profile_create_command("staging")
+    assert created == ["staging"]
+    assert capsys.readouterr().out == "Created profile 'staging'.\n"
+
+    cli.profile_use_command("staging")
+    assert switched == ["staging"]
+    assert capsys.readouterr().out == "Switched to profile 'staging'.\n"
+
+    cli.profile_delete_command("staging")
+    assert deleted == ["staging"]
+    assert capsys.readouterr().out == "Deleted profile 'staging'.\n"
