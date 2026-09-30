@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from devvault import cli
+from devvault.config import validate_key
 
 
 def test_parse_value():
@@ -12,9 +13,9 @@ def test_parse_value():
 
 
 def test_validate_key():
-    cli.validate_key("NAME")
-    cli.validate_key("_NAME")
-    cli.validate_key("DATABASE_URL_123")
+    validate_key("NAME")
+    validate_key("_NAME")
+    validate_key("DATABASE_URL_123")
 
 
 def test_validate_key_invalid():
@@ -27,7 +28,7 @@ def test_validate_key_invalid():
 
     for key in invalid_keys:
         try:
-            cli.validate_key(key)
+            validate_key(key)
         except ValueError:
             pass
         else:
@@ -227,3 +228,52 @@ def test_profile_cli_commands(monkeypatch, capsys):
     cli.profile_delete_command("staging")
     assert deleted == ["staging"]
     assert capsys.readouterr().out == "Deleted profile 'staging'.\n"
+
+
+def test_json_subcommand_parsing():
+    parser = cli.build_parser()
+
+    # Verify both subcommand --json and global --json parse without error
+    args1 = parser.parse_args(["list", "--json"])
+    assert args1.command == "list"
+    assert args1.json is True
+
+    args2 = parser.parse_args(["--json", "list"])
+    assert args2.command == "list"
+    assert args2.json is True
+
+    args3 = parser.parse_args(["profile", "list", "--json"])
+    assert args3.command == "profile"
+    assert args3.profile_action == "list"
+    assert args3.json is True
+
+    args4 = parser.parse_args(["validate", "--json"])
+    assert args4.command == "validate"
+    assert args4.json is True
+
+    args5 = parser.parse_args(["diff", "default", "staging", "--json"])
+    assert args5.command == "diff"
+    assert args5.json is True
+
+    args6 = parser.parse_args(["history", "--json"])
+    assert args6.command == "history"
+    assert args6.json is True
+
+    args7 = parser.parse_args(["info", "--json"])
+    assert args7.command == "info"
+    assert args7.json is True
+
+    args8 = parser.parse_args(["vault", "status", "--json"])
+    assert args8.command == "vault"
+    assert args8.vault_action == "status"
+    assert args8.json is True
+
+    args9 = parser.parse_args(["template", "list", "--json"])
+    assert args9.command == "template"
+    assert args9.template_action == "list"
+    assert args9.json is True
+
+    args10 = parser.parse_args(["secret", "list", "--json"])
+    assert args10.command == "secret"
+    assert args10.secret_action == "list"
+    assert args10.json is True

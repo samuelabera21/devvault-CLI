@@ -256,8 +256,7 @@ def get_all_entries(
     reveal_secrets: bool = False,
     config_file: Path | None = None,
 ) -> dict[str, Any]:
-    """Return dictionary of all entries with secrets masked unless reveal_secrets=True.
-    """
+    """Return entries with secrets masked unless reveal_secrets=True."""
     config = load_config(config_file)
     _, profile_data = _resolve_profile(config, profile)
 

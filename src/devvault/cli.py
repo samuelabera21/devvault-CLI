@@ -15,7 +15,6 @@ from devvault.config import (
     parse_value,
     remove_config,
     set_config,
-    validate_key,
 )
 from devvault.diff import compare_profiles, format_diff_text
 from devvault.exceptions import (
@@ -151,9 +150,7 @@ def info_command(profile: str | None = None, as_json: bool = False) -> None:
         print("DevVault")
         print(f"Config file: {config_file}")
         scope_desc = (
-            "Project-local"
-            if info_data["is_project_config"]
-            else "User-global"
+            "Project-local" if info_data["is_project_config"] else "User-global"
         )
         print(f"Scope: {scope_desc}")
         print(f"Active profile: {active_profile}")
@@ -340,9 +337,7 @@ def template_create_command(name: str, key_values: list[str]) -> None:
 def template_apply_command(
     name: str, profile: str | None = None, force: bool = False
 ) -> None:
-    target_prof, applied, skipped = apply_template(
-        name, profile=profile, force=force
-    )
+    target_prof, applied, skipped = apply_template(name, profile=profile, force=force)
     msg = (
         f"Applied template '{name}' to profile '{target_prof}' "
         f"({applied} applied, {skipped} skipped)."
@@ -399,6 +394,12 @@ def build_parser() -> argparse.ArgumentParser:
     # list
     list_parser = subparsers.add_parser("list", help="List configuration keys")
     list_parser.add_argument("--profile", help="Configuration profile to use")
+    list_parser.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
+    )
     list_parser.set_defaults(func=list_command)
 
     # set
@@ -446,6 +447,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     sec_list = sec_sub.add_parser("list", help="List secret keys")
     sec_list.add_argument("--profile", help="Configuration profile to use")
+    sec_list.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
+    )
     sec_list.set_defaults(func=secret_list_command)
 
     sec_rm = sec_sub.add_parser("remove", help="Remove a secret")
@@ -469,6 +476,12 @@ def build_parser() -> argparse.ArgumentParser:
     v_lock.set_defaults(func=vault_lock_command)
 
     v_status = vault_sub.add_parser("status", help="Display vault status")
+    v_status.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
+    )
     v_status.set_defaults(func=vault_status_command)
 
     # export
@@ -508,6 +521,12 @@ def build_parser() -> argparse.ArgumentParser:
         "validate", help="Validate configuration against schema"
     )
     val_parser.add_argument("--profile", help="Configuration profile to validate")
+    val_parser.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
+    )
     val_parser.set_defaults(func=validate_command)
 
     # diff
@@ -516,6 +535,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     diff_parser.add_argument("profile1", help="First profile")
     diff_parser.add_argument("profile2", help="Second profile")
+    diff_parser.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
+    )
     diff_parser.set_defaults(func=diff_command)
 
     # history
@@ -523,6 +548,12 @@ def build_parser() -> argparse.ArgumentParser:
     hist_parser.add_argument("--profile", help="Filter history by profile")
     hist_parser.add_argument(
         "--limit", type=int, help="Limit number of history entries"
+    )
+    hist_parser.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
     )
     hist_parser.set_defaults(func=history_command)
 
@@ -552,6 +583,12 @@ def build_parser() -> argparse.ArgumentParser:
     tmpl_sub = tmpl_parser.add_subparsers(dest="template_action")
 
     t_list = tmpl_sub.add_parser("list", help="List available templates")
+    t_list.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
+    )
     t_list.set_defaults(func=template_list_command)
 
     t_create = tmpl_sub.add_parser("create", help="Create custom template")
@@ -580,6 +617,12 @@ def build_parser() -> argparse.ArgumentParser:
     # info
     info_parser = subparsers.add_parser("info", help="Display project information")
     info_parser.add_argument("--profile", help="Configuration profile to inspect")
+    info_parser.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
+    )
     info_parser.set_defaults(func=info_command)
 
     # profile
@@ -589,6 +632,12 @@ def build_parser() -> argparse.ArgumentParser:
     profile_subparsers = profile_parser.add_subparsers(dest="profile_action")
 
     p_list = profile_subparsers.add_parser("list", help="List all profiles")
+    p_list.add_argument(
+        "--json",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Format command output as JSON",
+    )
     p_list.set_defaults(func=profile_list_command)
 
     p_create = profile_subparsers.add_parser("create", help="Create a new profile")
