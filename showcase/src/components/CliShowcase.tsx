@@ -9,7 +9,6 @@ export const CliShowcase: React.FC = () => {
   const activeWorkflow = CLI_WORKFLOWS.find((w) => w.id === activeTabId) || CLI_WORKFLOWS[0];
 
   const handleCopy = () => {
-    // Copy only the commands without the $ prompt
     const cleanCommand = activeWorkflow.command
       .split('\n')
       .map((line) => line.replace(/^\$\s*/, ''))
@@ -33,33 +32,15 @@ export const CliShowcase: React.FC = () => {
           </p>
         </div>
 
-        {/* Workflow Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            justifyContent: 'center',
-            marginBottom: '1.75rem',
-          }}
-        >
+        {/* Workflow Tabs (Horizontal scroll on mobile, flex-wrap on desktop) */}
+        <div className="tabs-scroll-container">
           {CLI_WORKFLOWS.map((tab) => {
             const isActive = tab.id === activeTabId;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTabId(tab.id)}
-                style={{
-                  padding: '0.6rem 1.1rem',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  transition: 'all 0.15s ease',
-                  backgroundColor: isActive ? 'var(--py-blue-primary)' : 'var(--bg-surface)',
-                  color: isActive ? '#ffffff' : 'var(--text-muted)',
-                  border: isActive ? '1px solid var(--py-blue-dark)' : '1px solid var(--border-subtle)',
-                  boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
-                }}
+                className={`tab-btn ${isActive ? 'tab-btn-active' : ''}`}
               >
                 {tab.label}
               </button>
@@ -68,22 +49,12 @@ export const CliShowcase: React.FC = () => {
         </div>
 
         {/* Tab Description */}
-        <div
-          style={{
-            textAlign: 'center',
-            marginBottom: '1.5rem',
-            color: 'var(--text-muted)',
-            fontSize: '0.9375rem',
-            maxWidth: '680px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-          }}
-        >
+        <div className="tab-description">
           {activeWorkflow.description}
         </div>
 
         {/* Terminal Window */}
-        <div className="terminal-window" style={{ maxWidth: '900px', margin: '0 auto' }}>
+        <div className="terminal-window cli-terminal-box">
           <div className="terminal-header">
             <div className="terminal-dots">
               <span className="terminal-dot dot-red" />
@@ -95,15 +66,15 @@ export const CliShowcase: React.FC = () => {
             </div>
             <button onClick={handleCopy} className="terminal-copy-btn" title="Copy workflow commands">
               {copied ? <Check size={13} /> : <Copy size={13} />}
-              <span>{copied ? 'Copied' : 'Copy Commands'}</span>
+              <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
 
-          <div className="terminal-body" style={{ minHeight: '260px' }}>
+          <div className="terminal-body">
             {/* Command lines */}
-            <div style={{ marginBottom: '1.25rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
               {activeWorkflow.command.split('\n').map((cmdLine, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <div key={idx} style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }}>
                   <span className="terminal-prompt-char">$</span>
                   <span className="terminal-command-text">{cmdLine.replace(/^\$\s*/, '')}</span>
                 </div>
@@ -111,22 +82,71 @@ export const CliShowcase: React.FC = () => {
             </div>
 
             {/* Output lines */}
-            <div
-              style={{
-                borderTop: '1px solid var(--border-terminal)',
-                paddingTop: '1rem',
-                color: 'var(--terminal-output)',
-                fontSize: '0.85rem',
-              }}
-            >
-              <div style={{ color: 'var(--terminal-muted)', fontSize: '0.75rem', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div className="terminal-output-container">
+              <div className="terminal-output-label">
                 Terminal Output
               </div>
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{activeWorkflow.output}</pre>
+              <pre className="terminal-output-pre">{activeWorkflow.output}</pre>
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        .tab-btn {
+          padding: 0.55rem 0.95rem;
+          border-radius: var(--radius-md);
+          font-size: 0.8125rem;
+          font-weight: 600;
+          transition: all 0.15s ease;
+          background-color: var(--bg-surface);
+          color: var(--text-muted);
+          border: 1px solid var(--border-subtle);
+          white-space: nowrap;
+          flex-shrink: 0;
+          min-height: 38px;
+        }
+        .tab-btn-active {
+          background-color: var(--py-blue-primary) !important;
+          color: #ffffff !important;
+          border-color: var(--py-blue-dark) !important;
+          box-shadow: var(--shadow-sm);
+        }
+        .tab-description {
+          text-align: center;
+          margin-bottom: 1.5rem;
+          color: var(--text-muted);
+          font-size: clamp(0.875rem, 1.8vw, 0.9375rem);
+          max-width: 680px;
+          margin-left: auto;
+          margin-right: auto;
+          padding: 0 0.5rem;
+        }
+        .cli-terminal-box {
+          max-width: 900px;
+          margin: 0 auto;
+        }
+        .terminal-output-container {
+          border-top: 1px solid var(--border-terminal);
+          padding-top: 0.85rem;
+          color: var(--terminal-output);
+          font-size: 0.8125rem;
+        }
+        .terminal-output-label {
+          color: var(--terminal-muted);
+          font-size: 0.7rem;
+          margin-bottom: 0.35rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .terminal-output-pre {
+          margin: 0;
+          white-space: pre-wrap;
+          word-break: break-word;
+          line-height: 1.55;
+          font-family: var(--font-mono);
+        }
+      `}</style>
     </section>
   );
 };

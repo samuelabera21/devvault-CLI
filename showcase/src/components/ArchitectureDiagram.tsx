@@ -22,66 +22,28 @@ export const ArchitectureDiagram: React.FC = () => {
         </div>
 
         {/* Interactive Architecture Workspace */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1.3fr',
-            gap: '2rem',
-            backgroundColor: 'var(--bg-surface)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-subtle)',
-            boxShadow: 'var(--shadow-md)',
-            padding: '2rem',
-            alignItems: 'start',
-          }}
-          className="arch-grid"
-        >
+        <div className="arch-card">
           {/* Left Column: File Tree */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--text-main)', fontWeight: 700, fontSize: '0.95rem' }}>
+          <div className="arch-tree-col">
+            <div className="arch-tree-header">
               <FolderTree size={18} color="var(--py-blue-primary)" />
               <span>src/devvault/ Package Structure</span>
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.35rem',
-                backgroundColor: 'var(--bg-surface-elevated)',
-                padding: '0.75rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-subtle)',
-                maxHeight: '420px',
-                overflowY: 'auto',
-              }}
-            >
+            <div className="arch-tree-list">
               {ARCHITECTURE_MODULES.map((mod) => {
                 const isSelected = mod.file === selectedModule;
                 return (
                   <button
                     key={mod.file}
                     onClick={() => setSelectedModule(mod.file)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.55rem 0.85rem',
-                      borderRadius: 'var(--radius-sm)',
-                      backgroundColor: isSelected ? 'var(--py-blue-primary)' : 'transparent',
-                      color: isSelected ? '#ffffff' : 'var(--text-main)',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.85rem',
-                      textAlign: 'left',
-                      transition: 'all 0.15s ease',
-                      border: isSelected ? '1px solid var(--py-blue-dark)' : '1px solid transparent',
-                    }}
+                    className={`arch-tree-btn ${isSelected ? 'arch-tree-btn-active' : ''}`}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <FileCode size={15} color={isSelected ? '#ffd43b' : 'var(--text-light)'} />
-                      <span>{mod.file}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', overflow: 'hidden' }}>
+                      <FileCode size={14} color={isSelected ? '#ffd43b' : 'var(--text-light)'} style={{ flexShrink: 0 }} />
+                      <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{mod.file}</span>
                     </div>
-                    <span style={{ fontSize: '0.7rem', opacity: isSelected ? 0.9 : 0.6 }}>
+                    <span className="arch-mod-tag">
                       {mod.role.split(' ')[0]}
                     </span>
                   </button>
@@ -91,65 +53,40 @@ export const ArchitectureDiagram: React.FC = () => {
           </div>
 
           {/* Right Column: Module Details & Responsibilities */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-terminal)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-terminal)',
-              padding: '1.75rem',
-              color: 'var(--terminal-text)',
-              minHeight: '380px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-            }}
-          >
+          <div className="arch-detail-col">
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-terminal)', paddingBottom: '0.85rem', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ color: 'var(--terminal-prompt)', fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}>Module:</span>
-                  <code style={{ color: '#ffd43b', fontWeight: 700, fontSize: '1.05rem' }}>{activeMod.file}</code>
+              <div className="arch-detail-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--terminal-prompt)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>Module:</span>
+                  <code style={{ color: '#ffd43b', fontWeight: 700, fontSize: '0.98rem' }}>{activeMod.file}</code>
                 </div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--terminal-muted)', fontFamily: 'var(--font-mono)' }}>
+                <span className="pep-badge">
                   PEP 8 Typed
                 </span>
               </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--terminal-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <div className="field-label">
                   Functional Role
                 </div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
                   {activeMod.role}
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--terminal-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
+                <div className="field-label">
                   Engineered Responsibility
                 </div>
-                <p style={{ fontSize: '0.925rem', lineHeight: 1.6, color: 'var(--terminal-output)' }}>
+                <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: 'var(--terminal-output)' }}>
                   {activeMod.responsibility}
                 </p>
               </div>
             </div>
 
             {/* Architecture Invariant Note */}
-            <div
-              style={{
-                marginTop: '1.5rem',
-                backgroundColor: 'rgba(56, 126, 184, 0.1)',
-                border: '1px solid rgba(56, 126, 184, 0.25)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '0.75rem 1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.65rem',
-                fontSize: '0.8rem',
-                color: '#79c0ff',
-              }}
-            >
-              <Info size={16} />
+            <div className="arch-note">
+              <Info size={15} style={{ flexShrink: 0 }} />
               <span>Zero-leakage guarantee: Secrets are isolated in storage metadata and masked by default in all view layers.</span>
             </div>
           </div>
@@ -157,10 +94,119 @@ export const ArchitectureDiagram: React.FC = () => {
       </div>
 
       <style>{`
-        @media (max-width: 860px) {
-          .arch-grid {
-            grid-template-columns: 1fr !important;
+        .arch-card {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+          background-color: var(--bg-surface);
+          border-radius: var(--radius-lg);
+          border: 1px solid var(--border-subtle);
+          box-shadow: var(--shadow-md);
+          padding: 1.25rem;
+          align-items: start;
+        }
+        @media (min-width: 860px) {
+          .arch-card {
+            grid-template-columns: 1fr 1.3fr;
+            padding: 2rem;
+            gap: 2rem;
           }
+        }
+        .arch-tree-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 0.85rem;
+          color: var(--text-main);
+          font-weight: 700;
+          font-size: 0.9rem;
+        }
+        .arch-tree-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.3rem;
+          background-color: var(--bg-surface-elevated);
+          padding: 0.6rem;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-subtle);
+          max-height: 360px;
+          overflow-y: auto;
+        }
+        .arch-tree-btn {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.5rem 0.75rem;
+          border-radius: var(--radius-sm);
+          background-color: transparent;
+          color: var(--text-main);
+          font-family: var(--font-mono);
+          font-size: 0.8125rem;
+          text-align: left;
+          transition: all 0.15s ease;
+          border: 1px solid transparent;
+          gap: 0.5rem;
+          min-height: 36px;
+        }
+        .arch-tree-btn-active {
+          background-color: var(--py-blue-primary) !important;
+          color: #ffffff !important;
+          border-color: var(--py-blue-dark) !important;
+        }
+        .arch-mod-tag {
+          font-size: 0.68rem;
+          opacity: 0.75;
+          flex-shrink: 0;
+        }
+        .arch-detail-col {
+          background-color: var(--bg-terminal);
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-terminal);
+          padding: 1.25rem;
+          color: var(--terminal-text);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          min-height: 320px;
+        }
+        @media (min-width: 640px) {
+          .arch-detail-col {
+            padding: 1.75rem;
+          }
+        }
+        .arch-detail-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid var(--border-terminal);
+          padding-bottom: 0.75rem;
+          margin-bottom: 1rem;
+          gap: 0.5rem;
+        }
+        .pep-badge {
+          font-size: 0.7rem;
+          color: var(--terminal-muted);
+          font-family: var(--font-mono);
+        }
+        .field-label {
+          font-size: 0.75rem;
+          color: var(--terminal-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.25rem;
+        }
+        .arch-note {
+          margin-top: 1.25rem;
+          background-color: rgba(56, 126, 184, 0.1);
+          border: 1px solid rgba(56, 126, 184, 0.25);
+          border-radius: var(--radius-sm);
+          padding: 0.65rem 0.85rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.75rem;
+          color: #79c0ff;
+          line-height: 1.45;
         }
       `}</style>
     </section>

@@ -13,119 +13,54 @@ export const Hero: React.FC = () => {
   };
 
   return (
-    <header
-      style={{
-        paddingTop: '4.5rem',
-        paddingBottom: '5rem',
-        background: 'linear-gradient(180deg, #ffffff 0%, var(--bg-surface-elevated) 100%)',
-        borderBottom: '1px solid var(--border-subtle)',
-      }}
-    >
+    <header className="hero-section">
       <div className="container">
-        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '3.5rem', alignItems: 'center' }} className="hero-grid">
+        <div className="hero-grid">
           {/* Left Column - Messaging */}
-          <div>
+          <div className="hero-content">
             {/* Pill Badge */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                backgroundColor: 'var(--py-blue-subtle)',
-                color: 'var(--py-blue-primary)',
-                padding: '0.35rem 0.85rem',
-                borderRadius: '9999px',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                border: '1px solid rgba(48, 105, 152, 0.2)',
-                marginBottom: '1.25rem',
-              }}
-            >
-              <Cpu size={15} />
+            <div className="hero-badge">
+              <Cpu size={14} />
               <span>Python 3.12+ Developer CLI Tool</span>
             </div>
 
             {/* Main Heading */}
-            <h1
-              style={{
-                fontSize: '3.125rem',
-                fontWeight: 800,
-                color: 'var(--text-main)',
-                lineHeight: 1.15,
-                letterSpacing: '-0.03em',
-                marginBottom: '1.25rem',
-              }}
-              className="hero-heading"
-            >
-              Local Configuration &{' '}
-              <span style={{ color: 'var(--py-blue-primary)', textDecoration: 'underline decoration-color: var(--py-yellow-primary)' }}>
+            <h1 className="hero-heading">
+              Local Configuration &amp;{' '}
+              <span className="hero-highlight">
                 Secrets Management
               </span>{' '}
               for Python
             </h1>
 
             {/* Subheading / Tagline */}
-            <p
-              style={{
-                fontSize: '1.1875rem',
-                color: 'var(--text-muted)',
-                lineHeight: 1.6,
-                marginBottom: '2rem',
-                maxWidth: '560px',
-              }}
-            >
-              {PROJECT_DATA.tagline} Isolate multi-environment profiles, enforce schemas, protect credentials with Fernet encryption, and inject configurations into subprocesses.
+            <p className="hero-tagline">
+              {PROJECT_DATA.tagline} Isolate multi-environment profiles, enforce schemas, protect credentials with Fernet encryption, and inject configurations into child subprocesses.
             </p>
 
             {/* Quick Install Bar with Copy */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                backgroundColor: 'var(--bg-terminal)',
-                padding: '0.45rem 0.5rem 0.45rem 1.1rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-terminal)',
-                marginBottom: '2rem',
-                boxShadow: 'var(--shadow-sm)',
-                maxWidth: '100%',
-              }}
-            >
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.875rem', color: 'var(--terminal-prompt)', marginRight: '0.6rem', userSelect: 'none' }}>
-                $
-              </span>
-              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#ffd43b', fontWeight: 600, marginRight: '1rem', overflowX: 'auto' }}>
-                {installCmd}
-              </code>
+            <div className="hero-install-box">
+              <div className="hero-install-code">
+                <span className="terminal-prompt-char">$</span>
+                <code>{installCmd}</code>
+              </div>
               <button
                 onClick={copyInstallCommand}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  backgroundColor: copied ? 'var(--py-blue-light)' : 'rgba(255, 255, 255, 0.1)',
-                  color: '#ffffff',
-                  padding: '0.4rem 0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  transition: 'all 0.15s ease',
-                }}
+                className="hero-install-btn"
                 title="Copy installation command"
               >
-                {copied ? <Check size={13} /> : <Copy size={13} />}
+                {copied ? <Check size={14} /> : <Copy size={14} />}
                 <span>{copied ? 'Copied!' : 'Copy'}</span>
               </button>
             </div>
 
             {/* Primary Action Buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
+            <div className="hero-cta-group">
               <a
                 href={PROJECT_DATA.pypiUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary"
-                style={{ padding: '0.8rem 1.4rem' }}
+                className="btn btn-primary hero-btn"
               >
                 <Package size={18} />
                 <span>View on PyPI</span>
@@ -134,8 +69,7 @@ export const Hero: React.FC = () => {
                 href={PROJECT_DATA.repositoryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-secondary"
-                style={{ padding: '0.8rem 1.4rem' }}
+                className="btn btn-secondary hero-btn"
               >
                 <Github size={18} />
                 <span>GitHub Repository</span>
@@ -143,16 +77,16 @@ export const Hero: React.FC = () => {
             </div>
 
             {/* Key Trust Badges */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.25rem', marginTop: '2.25rem', color: 'var(--text-light)', fontSize: '0.8125rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <div className="hero-trust-row">
+              <div className="trust-item">
                 <CheckCircle size={15} color="var(--py-blue-primary)" />
-                <span>Zero Plaintext Secret Leaks</span>
+                <span>Zero Secret Leakage</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div className="trust-item">
                 <Shield size={15} color="var(--py-blue-primary)" />
                 <span>Fernet AES-128-CBC at Rest</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div className="trust-item">
                 <CheckCircle size={15} color="var(--py-blue-primary)" />
                 <span>99 Automated Tests Passing</span>
               </div>
@@ -160,7 +94,7 @@ export const Hero: React.FC = () => {
           </div>
 
           {/* Right Column - Terminal Preview */}
-          <div>
+          <div className="hero-terminal-col">
             <div className="terminal-window">
               <div className="terminal-header">
                 <div className="terminal-dots">
@@ -173,7 +107,7 @@ export const Hero: React.FC = () => {
                   v{PROJECT_DATA.version}
                 </div>
               </div>
-              <div className="terminal-body" style={{ minHeight: '340px' }}>
+              <div className="terminal-body" style={{ minHeight: '300px' }}>
                 <div>
                   <span className="terminal-prompt-char">$</span>
                   <span className="terminal-command-text">devvault --version</span>
@@ -211,13 +145,140 @@ Vault: Initialized (Unlocked)</div>
       </div>
 
       <style>{`
-        @media (max-width: 960px) {
-          .hero-grid {
-            grid-template-columns: 1fr !important;
-            gap: 2.5rem !important;
+        .hero-section {
+          padding-top: 3.5rem;
+          padding-bottom: 3.5rem;
+          background: linear-gradient(180deg, #ffffff 0%, var(--bg-surface-elevated) 100%);
+          border-bottom: 1px solid var(--border-subtle);
+        }
+        @media (min-width: 768px) {
+          .hero-section {
+            padding-top: 5rem;
+            padding-bottom: 5.5rem;
           }
-          .hero-heading {
-            font-size: 2.35rem !important;
+        }
+        .hero-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 2.5rem;
+          align-items: center;
+        }
+        @media (min-width: 960px) {
+          .hero-grid {
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 3.5rem;
+          }
+        }
+        .hero-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          background-color: var(--py-blue-subtle);
+          color: var(--py-blue-primary);
+          padding: 0.35rem 0.8rem;
+          border-radius: 9999px;
+          font-size: 0.78rem;
+          font-weight: 600;
+          border: 1px solid rgba(48, 105, 152, 0.2);
+          margin-bottom: 1rem;
+        }
+        .hero-heading {
+          font-size: clamp(1.85rem, 5.5vw, 3.125rem);
+          font-weight: 800;
+          color: var(--text-main);
+          line-height: 1.15;
+          letter-spacing: -0.03em;
+          margin-bottom: 1rem;
+        }
+        .hero-highlight {
+          color: var(--py-blue-primary);
+          text-decoration: underline;
+          text-decoration-color: var(--py-yellow-primary);
+          text-decoration-thickness: 4px;
+          text-underline-offset: 4px;
+        }
+        .hero-tagline {
+          font-size: clamp(1rem, 2vw, 1.1875rem);
+          color: var(--text-muted);
+          line-height: 1.6;
+          margin-bottom: 1.5rem;
+          max-width: 560px;
+        }
+        .hero-install-box {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background-color: var(--bg-terminal);
+          padding: 0.4rem 0.5rem 0.4rem 0.9rem;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-terminal);
+          margin-bottom: 1.75rem;
+          box-shadow: var(--shadow-sm);
+          width: 100%;
+          max-width: 440px;
+          gap: 0.5rem;
+        }
+        .hero-install-code {
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
+          font-family: var(--font-mono);
+          font-size: clamp(0.78rem, 2.2vw, 0.9rem);
+          color: #ffd43b;
+          font-weight: 600;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+        .hero-install-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          background-color: rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+          padding: 0.45rem 0.75rem;
+          border-radius: var(--radius-sm);
+          font-size: 0.75rem;
+          font-weight: 600;
+          transition: all 0.15s ease;
+          flex-shrink: 0;
+          min-height: 34px;
+        }
+        .hero-install-btn:hover {
+          background-color: var(--py-blue-light);
+        }
+        .hero-cta-group {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+        .hero-btn {
+          padding: 0.8rem 1.35rem;
+        }
+        @media (max-width: 480px) {
+          .hero-cta-group {
+            flex-direction: column;
+          }
+          .hero-btn {
+            width: 100%;
+          }
+        }
+        .hero-trust-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-top: 2rem;
+          color: var(--text-light);
+          font-size: 0.8125rem;
+        }
+        .trust-item {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+        }
+        @media (max-width: 480px) {
+          .hero-trust-row {
+            flex-direction: column;
+            gap: 0.5rem;
           }
         }
       `}</style>
