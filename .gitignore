@@ -20,3 +20,8 @@ htmlcov/
 
 .DS_Store
 Thumbs.db
+
+# Showcase
+showcase/node_modules/
+showcase/dist/
+

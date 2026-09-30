@@ -397,6 +397,19 @@ python -m build
 
 ---
 
+## Project Showcase
+
+A standalone frontend showcase website presenting DevVault's features, architecture, and CLI workflows is available in:
+
+```bash
+showcase/
+```
+
+See [showcase/README.md](showcase/README.md) for local development and Netlify deployment instructions.
+
+---
+
 ## License
 
 This project is licensed under the MIT License.
+
