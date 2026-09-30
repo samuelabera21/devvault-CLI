@@ -37,22 +37,24 @@ def test_validate_key_invalid():
 def test_set_command(monkeypatch, capsys):
     saved = {}
 
-    def fake_set_config(key, value, profile=None):
-        saved[(key, profile)] = value
+    def fake_set_config(key, value, is_secret=False, profile=None):
+        saved[(key, is_secret, profile)] = value
 
     monkeypatch.setattr(cli, "set_config", fake_set_config)
 
     cli.set_command("DEBUG", "true")
-    assert saved[("DEBUG", None)] is True
-    assert capsys.readouterr().out == "Saved DEBUG.\n"
+    assert saved[("DEBUG", False, None)] is True
+    assert capsys.readouterr().out == "Saved configuration 'DEBUG'.\n"
 
-    cli.set_command("PORT", "8000", profile="dev")
-    assert saved[("PORT", "dev")] == 8000
-    assert capsys.readouterr().out == "Saved PORT.\n"
+    cli.set_command("PORT", "8000", is_secret=False, profile="dev")
+    assert saved[("PORT", False, "dev")] == 8000
+    assert capsys.readouterr().out == "Saved configuration 'PORT'.\n"
 
 
 def test_get_command(monkeypatch, capsys):
-    monkeypatch.setattr(cli, "get_config", lambda key, profile=None: "Samuel")
+    monkeypatch.setattr(
+        cli, "get_config", lambda key, profile=None, show_secret=False: "Samuel"
+    )
 
     cli.get_command("NAME")
     assert capsys.readouterr().out == "Samuel\n"
@@ -64,7 +66,7 @@ def test_get_command(monkeypatch, capsys):
 def test_get_command_missing_key(monkeypatch, capsys):
     from devvault.exceptions import ConfigKeyNotFoundError
 
-    def fake_get_config(key, profile=None):
+    def fake_get_config(key, profile=None, show_secret=False):
         raise ConfigKeyNotFoundError(f"Key '{key}' not found.")
 
     monkeypatch.setattr(cli, "get_config", fake_get_config)
@@ -138,7 +140,11 @@ def test_import_command(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "import_env_file",
-        lambda file_path, profile=None, force=False: ("default", 3, 0),
+        lambda file_path, profile=None, force=False, is_secret=False: (
+            "default",
+            3,
+            0,
+        ),
     )
 
     cli.import_command(env_file, force=False)
@@ -150,7 +156,11 @@ def test_import_command(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "import_env_file",
-        lambda file_path, profile=None, force=False: ("staging", 2, 1),
+        lambda file_path, profile=None, force=False, is_secret=False: (
+            "staging",
+            2,
+            1,
+        ),
     )
 
     cli.import_command(env_file, force=False, profile="staging")
@@ -171,8 +181,8 @@ def test_info_command(monkeypatch, capsys):
         lambda: {
             "active_profile": "default",
             "profiles": {
-                "default": {"KEY1": "VAL1"},
-                "dev": {"KEY2": "VAL2", "KEY3": "VAL3"},
+                "default": {"values": {"KEY1": "VAL1"}, "secrets": {}},
+                "dev": {"values": {"KEY2": "VAL2", "KEY3": "VAL3"}, "secrets": {}},
             },
         },
     )
@@ -181,11 +191,11 @@ def test_info_command(monkeypatch, capsys):
     output = capsys.readouterr().out
     assert "Active profile: default" in output
     assert "Total profiles: 2" in output
-    assert "Entries: 1" in output
+    assert "Entries: 1 (1 values, 0 secrets)" in output
 
     cli.info_command(profile="dev")
     output_dev = capsys.readouterr().out
-    assert "Entries: 2" in output_dev
+    assert "Entries: 2 (2 values, 0 secrets)" in output_dev
 
 
 def test_profile_cli_commands(monkeypatch, capsys):

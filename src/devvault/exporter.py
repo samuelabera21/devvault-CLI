@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Any
 
-from devvault.config import _resolve_profile
+from devvault.config import _resolve_profile, get_all_entries
+from devvault.history import record_history
 from devvault.storage import load_config
 
 
@@ -60,9 +61,21 @@ def export_env_file(
         )
 
     config = load_config(config_file)
-    target_profile, profile_data = _resolve_profile(config, profile)
+    target_profile, _ = _resolve_profile(config, profile)
 
-    content = format_dotenv(profile_data)
+    entries = get_all_entries(
+        profile=target_profile, reveal_secrets=True, config_file=config_file
+    )
+
+    content = format_dotenv(entries)
     path.write_text(content, encoding="utf-8")
 
-    return target_profile, len(profile_data)
+    record_history(
+        action="EXPORT",
+        profile=target_profile,
+        key=str(path.name),
+        is_secret=False,
+        config_file=config_file,
+    )
+
+    return target_profile, len(entries)

@@ -1,8 +1,9 @@
 from pathlib import Path
 from typing import Any
 
-from devvault.config import _resolve_profile, parse_value, validate_key
-from devvault.storage import load_config, save_config
+from devvault.config import _resolve_profile, parse_value, set_config, validate_key
+from devvault.history import record_history
+from devvault.storage import load_config
 
 
 def parse_dotenv_line(line: str, line_num: int = 1) -> tuple[str, Any] | None:
@@ -47,6 +48,7 @@ def import_env_file(
     file_path: Path | str,
     profile: str | None = None,
     force: bool = False,
+    is_secret: bool = False,
     config_file: Path | None = None,
 ) -> tuple[str, int, int]:
     """Import key-value pairs from a dotenv file into the target profile."""
@@ -63,17 +65,33 @@ def import_env_file(
     config = load_config(config_file)
     target_profile, profile_data = _resolve_profile(config, profile)
 
+    values_dict = profile_data.setdefault("values", {})
+    secrets_dict = profile_data.setdefault("secrets", {})
+
     imported_count = 0
     skipped_count = 0
 
     for key, value in entries.items():
-        if key in profile_data and not force:
+        exists = (key in values_dict) or (key in secrets_dict)
+        if exists and not force:
             skipped_count += 1
         else:
-            profile_data[key] = value
+            set_config(
+                key=key,
+                value=value,
+                is_secret=is_secret,
+                profile=target_profile,
+                config_file=config_file,
+            )
             imported_count += 1
 
     if imported_count > 0:
-        save_config(config, config_file)
+        record_history(
+            action="IMPORT",
+            profile=target_profile,
+            key=str(path.name),
+            is_secret=is_secret,
+            config_file=config_file,
+        )
 
     return target_profile, imported_count, skipped_count

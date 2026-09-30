@@ -6,6 +6,7 @@ from devvault.exceptions import (
     ProfileError,
     ProfileNotFoundError,
 )
+from devvault.history import record_history
 from devvault.storage import (
     DEFAULT_PROFILE,
     load_config,
@@ -49,6 +50,13 @@ def set_active_profile(name: str, config_file: Path | None = None) -> None:
 
     config["active_profile"] = name
     save_config(config, config_file)
+    record_history(
+        action="PROFILE_USE",
+        profile=name,
+        key=name,
+        is_secret=False,
+        config_file=config_file,
+    )
 
 
 def create_profile(name: str, config_file: Path | None = None) -> None:
@@ -59,8 +67,18 @@ def create_profile(name: str, config_file: Path | None = None) -> None:
     if name in config["profiles"]:
         raise ProfileAlreadyExistsError(f"Profile '{name}' already exists.")
 
-    config["profiles"][name] = {}
+    config["profiles"][name] = {
+        "values": {},
+        "secrets": {},
+    }
     save_config(config, config_file)
+    record_history(
+        action="PROFILE_CREATE",
+        profile=name,
+        key=name,
+        is_secret=False,
+        config_file=config_file,
+    )
 
 
 def delete_profile(name: str, config_file: Path | None = None) -> None:
@@ -82,3 +100,10 @@ def delete_profile(name: str, config_file: Path | None = None) -> None:
 
     del config["profiles"][name]
     save_config(config, config_file)
+    record_history(
+        action="PROFILE_DELETE",
+        profile=name,
+        key=name,
+        is_secret=False,
+        config_file=config_file,
+    )

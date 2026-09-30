@@ -1,275 +1,324 @@
 # DevVault
 
-DevVault is a local command-line tool for managing developer configuration values.
+DevVault is a modern local developer configuration and secrets management CLI written in Python.
 
-It is a learning project focused on practicing modern Python project development, CLI design, file storage, testing, code quality, and software engineering fundamentals.
+It is designed to give developers an intuitive, reliable, and secure workflow for managing application configuration, environment profiles, secrets, and project bootstrapping without accidental data loss or secret exposure.
+
+---
 
 ## Features
 
-- Initialize a local DevVault configuration
-- Organize configuration using **Environments / Profiles** (`default`, `dev`, `staging`, `production`, etc.)
-- Set configuration values (per-profile or in active profile)
-- Get configuration values
-- List configuration keys
-- Remove configuration values
-- Import configuration from `.env` files with duplicate protection
-- Export configuration to a `.env` file with overwrite safety and value quoting
-- Display project and profile information
-- Display the application version
-- Command-line help
-- JSON-based local storage with backward compatibility
-- Automated tests with pytest
-- Code quality checks with Ruff
-- Static type checking with mypy
+- **Core Configuration**: Simple `init`, `set`, `get`, `list`, and `remove` commands with automatic type parsing (`bool`, `int`, `float`, `str`).
+- **Configuration Profiles**: Multi-environment isolation (`default`, `dev`, `staging`, `production`) with active profile switching.
+- **Secret Management**: Mark sensitive configuration values as secrets (`--secret`) with automated masking across lists, history, and exceptions.
+- **Encryption at Rest**: Optional AES-128-CBC encryption authenticated with HMAC-SHA256 (via `cryptography` / Fernet) with PBKDF2 key derivation.
+- **.env Import & Export**: Safe dotenv import and export with duplicate-key protection, quote preservation, and overwrite guards.
+- **Schema Validation**: Define project-level schema rules (types, required keys, min/max ranges, allowed values) and run profile validation.
+- **Configuration Diff**: Compare configuration across profiles with safe masked secret comparison.
+- **Audit History**: Track all configuration lifecycle operations (`SET`, `REMOVE`, `IMPORT`, `PROFILE_USE`, etc.) with safe metadata.
+- **Backup & Restore**: Checksum-verified JSON backup archives with corruption detection and safe restore procedures.
+- **Project Configuration**: Initialize project-local `.devvault/` workspaces with automatic `.gitignore` protection and configuration precedence.
+- **Configuration Templates**: Bootstrap project settings using built-in templates (`fastapi`, `django`, `node-api`, `nextjs`, `python-api`) or user-defined templates.
+- **Command Runner**: Execute child processes with isolated DevVault environment variable injection (`devvault run -- python app.py`).
+- **Machine-Readable Output**: Full `--json` support across commands for scripts and CI/CD pipelines.
+- **Structured & Redacted Logging**: Configurable logging levels (`--verbose`, `--quiet`) with regex-based credential redaction.
+
+---
 
 ## Requirements
 
-- Python 3.12 or newer
+- Python >= 3.12
 - Git
+
+---
 
 ## Installation
 
 Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/samuelabera21/devvault-CLI.git
 cd devvault
 ```
 
-Create a virtual environment:
+Create and activate a virtual environment:
 
 ```bash
+# Windows PowerShell
 python -m venv .venv
-```
-
-Activate the virtual environment.
-
-### Windows PowerShell
-
-```powershell
 .\.venv\Scripts\Activate.ps1
-```
 
-### Windows Git Bash / POSIX
-
-```bash
+# Windows Git Bash / Linux / macOS
 source .venv/Scripts/activate
 ```
 
-Install DevVault with its development dependencies:
+Install DevVault in editable mode with development dependencies:
 
 ```bash
-python -m pip install -e ".[dev]"
+pip install -e ".[dev]"
 ```
-
-## Usage
-
-### Initialize DevVault
-
-Before using DevVault, initialize its local configuration:
-
-```bash
-devvault init
-```
-
-DevVault stores its configuration in:
-
-```text
-~/.devvault/config.json
-```
-
-### Configuration Profiles
-
-DevVault supports managing configuration across multiple isolated profiles (such as `dev`, `staging`, and `production`).
-
-#### List profiles
-
-```bash
-devvault profile list
-```
-
-Output:
-```text
-* default
-  dev
-  staging
-```
-
-#### Create a profile
-
-```bash
-devvault profile create dev
-devvault profile create staging
-```
-
-#### Show active profile
-
-```bash
-devvault profile current
-```
-
-#### Switch active profile
-
-```bash
-devvault profile use dev
-```
-
-#### Delete a profile
-
-```bash
-devvault profile delete staging
-```
-
-> **Note:** To prevent accidental data loss, DevVault safely prevents deleting the currently active profile.
 
 ---
 
-### Configuration Management
-
-#### Set a configuration value
-
-Set a value in the currently active profile:
+## Quick Start
 
 ```bash
-devvault set DATABASE_URL "postgresql://localhost/myapp"
-```
+# 1. Initialize configuration
+devvault init
 
-Set a value in a specific profile without switching:
+# 2. Set configuration values
+devvault set APP_NAME "My Application"
+devvault set PORT 8000
+devvault set DEBUG true
 
-```bash
-devvault set DATABASE_URL "postgresql://staging-db/myapp" --profile staging
-```
+# 3. Store a sensitive secret
+devvault set API_KEY "sk-live-secret-token" --secret
 
-Supported value types:
-- **Boolean:** `devvault set DEBUG true`
-- **Integer:** `devvault set PORT 8000`
-- **Float:** `devvault set TIMEOUT 2.5`
-- **String:** `devvault set APP_NAME "MyApp"`
-
-#### Get a configuration value
-
-```bash
-devvault get DATABASE_URL
-devvault get DATABASE_URL --profile staging
-```
-
-#### List configuration keys
-
-```bash
+# 4. View configuration keys
 devvault list
-devvault list --profile staging
+
+# 5. Access values safely
+devvault get PORT
+devvault get API_KEY --show
 ```
 
-#### Remove a configuration value
+---
+
+## Command Reference & Usage
+
+### 1. Configuration Profiles
+
+Manage isolated configuration environments:
 
 ```bash
-devvault remove DEBUG
-devvault remove DEBUG --profile staging
+# List all profiles (* denotes active profile)
+devvault profile list
+
+# Create a new profile
+devvault profile create staging
+devvault profile create prod
+
+# Switch the active profile
+devvault profile use staging
+
+# Show the active profile name
+devvault profile current
+
+# Delete a profile safely (active profile deletion is prevented)
+devvault profile delete staging
 ```
 
-#### Import configuration
-
-Import configuration from a `.env` file into the active profile:
+All standard configuration commands accept `--profile <name>` to operate on a profile without switching to it:
 
 ```bash
+devvault set DB_URL "postgres://staging-db:5432/app" --profile staging
+devvault get DB_URL --profile staging
+```
+
+---
+
+### 2. Secret Management & Vault Encryption
+
+#### Storing Secrets
+Mark any configuration key as sensitive:
+
+```bash
+devvault set STRIPE_KEY "sk_test_12345" --secret
+# Or use the secret subcommand
+devvault secret set DATABASE_PASS "super_secret_pw"
+```
+
+Secrets are **masked** in lists, diffs, history, and normal `get` commands.
+
+To view a secret explicitly:
+
+```bash
+devvault get STRIPE_KEY --show
+# Or
+devvault secret get STRIPE_KEY
+```
+
+#### Encryption at Rest (Vault)
+DevVault supports encrypting secrets using symmetric Fernet encryption derived from a user passphrase:
+
+```bash
+# 1. Initialize vault encryption
+devvault vault init "my-master-passphrase"
+
+# 2. Check vault status
+devvault vault status
+
+# 3. Unlock vault for the current session or CI (or set DEVVAULT_KEY)
+devvault vault unlock "my-master-passphrase"
+
+# 4. Lock vault
+devvault vault lock
+```
+
+When the vault is initialized, secret values are automatically encrypted before being written to disk.
+
+---
+
+### 3. `.env` Import and Export
+
+#### Import `.env` Files
+```bash
+# Import into active profile
 devvault import .env
-```
 
-Import into a specific profile:
-
-```bash
+# Import into specific profile
 devvault import .env.staging --profile staging
-```
 
-##### Supported `.env` Syntax
-- `KEY=value`
-- `KEY="value"` (double quotes)
-- `KEY='value'` (single quotes)
-- Comment lines beginning with `#`
-- Blank lines and whitespace
-
-##### Duplicate Key Handling
-By default, DevVault will **never silently overwrite** existing keys. If an imported key already exists in the target profile, DevVault skips it and reports the count:
-
-```text
-Imported 2 configuration entries into profile 'dev'.
-Skipped 1 existing entries.
-```
-
-To explicitly allow overwriting existing keys, use `--force`:
-
-```bash
+# Overwrite existing keys (default behavior protects existing keys)
 devvault import .env --force
+
+# Import keys as sensitive secrets
+devvault import .env.secrets --secret
 ```
 
-#### Export configuration
-
-Export configuration from the active profile to a `.env` file:
-
+#### Export to `.env`
 ```bash
+# Export active profile to file
 devvault export .env
-```
 
-Export configuration from a specific profile:
+# Export specific profile
+devvault export .env.production --profile prod
 
-```bash
-devvault export .env.staging --profile staging
-```
-
-##### Overwrite Protection
-DevVault **never silently overwrites** an existing file. If the target file already exists, DevVault refuses to overwrite it and prompts you to provide `--force`:
-
-```text
-Error: File '.env' already exists. Use --force to overwrite.
-```
-
-To explicitly allow overwriting:
-
-```bash
+# Overwrite destination file safely
 devvault export .env --force
 ```
 
-##### Serialization and Quoting
-DevVault safely serializes all stored data types to dotenv format:
-- Booleans are exported as lowercase `true` / `false`.
-- Numbers (integers, floats) are exported as numeric literals.
-- Strings containing spaces, special characters (`#`, `=`, etc.), or empty strings are automatically quoted.
-- Exported `.env` files can be cleanly imported back via `devvault import`.
+---
 
-##### Security Considerations
-DevVault never displays exported values or secrets in console logs or command output. It outputs a summary count of exported entries:
+### 4. Configuration Schema Validation
 
+Define constraints and validate configuration profiles:
+
+```bash
+# Run validation against schema
+devvault validate
+devvault validate --profile staging
+devvault validate --json
+```
+
+---
+
+### 5. Configuration Diff
+
+Compare configuration between two profiles safely without leaking secrets:
+
+```bash
+devvault diff dev staging
+devvault diff staging prod --json
+```
+
+Example output:
 ```text
-Exported 3 configuration entries to '.env'.
+Comparing 'dev' -> 'staging':
+
+Added:
+  + REDIS_URL
+
+Removed:
+  - LOCAL_DEBUG_FLAG
+
+Modified:
+  * PORT
+      dev: 8000
+      staging: 9000
+  * API_KEY (secret value differs)
 ```
 
-#### Display project information
+---
+
+### 6. Audit History
+
+Track all configuration mutations:
 
 ```bash
-devvault info
-devvault info --profile staging
+devvault history
+devvault history --profile staging --limit 10
+devvault history --json
 ```
 
-#### Display help
+---
+
+### 7. Backup and Restore
+
+Create verified backup archives with SHA-256 integrity checksums:
 
 ```bash
-devvault --help
-devvault profile --help
-devvault set --help
-devvault get --help
-devvault import --help
-devvault export --help
+# Create backup
+devvault backup config-backup.json
+devvault backup config-backup.json --force
+
+# Restore backup
+devvault restore config-backup.json --force
 ```
 
-#### Display the version
+---
+
+### 8. Project-Local Workspaces
+
+Initialize project-level `.devvault/` configuration:
 
 ```bash
-devvault --version
+devvault project init
+```
+This creates:
+- `.devvault/config.json` (Project configuration, takes precedence when in project root)
+- `.env.example`
+- Updates `.gitignore` to safely prevent committing secrets.
+
+---
+
+### 9. Configuration Templates
+
+Bootstrap configuration from industry-standard templates:
+
+```bash
+# List available templates
+devvault template list
+
+# Apply a template to profile
+devvault template apply fastapi --profile dev
+devvault template apply django --profile prod
+
+# Create a custom template
+devvault template create microservice PORT=5000 LOG_LEVEL=DEBUG
 ```
 
-## Project Structure
+---
 
-DevVault uses a standard `src` project layout:
+### 10. Command Runner
+
+Run commands with DevVault configuration automatically injected into child process environment variables:
+
+```bash
+devvault run -- python app.py
+devvault run --profile staging -- npm start
+```
+
+---
+
+### 11. Machine-Readable JSON Output
+
+All major read commands support `--json`:
+
+```bash
+devvault list --json
+devvault profile list --json
+devvault info --json
+devvault history --json
+devvault validate --json
+devvault diff dev staging --json
+```
+
+---
+
+## Architecture & Project Structure
+
+DevVault is organized using a clean modular layout:
 
 ```text
 devvault/
@@ -278,87 +327,76 @@ devvault/
 ├── src/
 │   └── devvault/
 │       ├── __init__.py
-│       ├── __main__.py
-│       ├── cli.py
-│       ├── config.py
-│       ├── exporter.py
-│       ├── importer.py
-│       ├── profiles.py
-│       ├── storage.py
-│       └── exceptions.py
+│       ├── __main__.py          # Entrypoint for python -m devvault
+│       ├── cli.py               # CLI argument parser and UX dispatching
+│       ├── config.py            # Core configuration and secret storage
+│       ├── storage.py           # Persistence, schema normalization, precedence
+│       ├── security.py          # Cryptography, key derivation, and vault lifecycle
+│       ├── profiles.py          # Profile management and validation
+│       ├── validation.py        # Schema validation rules and constraints
+│       ├── diff.py              # Profile comparison and secret diffing
+│       ├── history.py           # Audit logging
+│       ├── backup.py            # Checksum-verified backup and restore
+│       ├── project.py           # Project-level workspace initialization
+│       ├── templates.py         # Built-in and user configuration templates
+│       ├── runner.py            # Environment-injected subprocess execution
+│       ├── importer.py          # Robust dotenv parsing
+│       ├── exporter.py          # Value quoting and dotenv serialization
+│       ├── exceptions.py        # Exception hierarchy
+│       └── logging_config.py    # Structured logging with credential redaction
 └── tests/
     ├── test_cli.py
     ├── test_config.py
-    ├── test_exporter.py
+    ├── test_profiles.py
+    ├── test_secrets.py
+    ├── test_vault.py
+    ├── test_validation.py
+    ├── test_diff.py
+    ├── test_history.py
+    ├── test_backup.py
+    ├── test_project.py
+    ├── test_templates.py
+    ├── test_runner.py
     ├── test_importer.py
-    └── test_profiles.py
+    ├── test_exporter.py
+    └── test_logging.py
 ```
 
-## Development & Quality Checks
+---
 
-### Run tests
+## Development & Quality Assurance
 
-Run the complete test suite:
+Run the test suite:
 
 ```bash
 pytest
 ```
 
-### Run Ruff
-
-Check the code for linting problems:
+Run static analysis and linting:
 
 ```bash
 ruff check .
-```
-
-Format the project:
-
-```bash
 ruff format --check .
-```
-
-### Run mypy
-
-Run static type checking:
-
-```bash
 mypy src
 ```
 
-## Configuration Storage
+Build the distribution package:
 
-DevVault stores configuration locally as JSON:
-
-```text
-~/.devvault/config.json
+```bash
+python -m build
 ```
 
-Example structure:
+---
 
-```json
-{
-    "active_profile": "default",
-    "profiles": {
-        "default": {
-            "DATABASE_URL": "postgresql://localhost/myapp",
-            "DEBUG": true,
-            "PORT": 8000
-        },
-        "staging": {
-            "DATABASE_URL": "postgresql://staging-db/myapp",
-            "PORT": 8000
-        }
-    }
-}
-```
+## Security Model & Limitations
 
-DevVault automatically normalizes legacy flat configuration files on load without data loss.
+1. **Local Configuration Manager**: DevVault is designed as a developer CLI for local developer workflows and CI/CD pipelines. It is **not** a replacement for centralized enterprise vaults (such as HashiCorp Vault or AWS Secrets Manager).
+2. **Encryption**: Cryptography is implemented using standard `cryptography.fernet.Fernet` (AES-128-CBC with HMAC-SHA256) and PBKDF2HMAC key derivation with 100,000 iterations.
+3. **Secret Masking**: Secret values are masked as `********` across list, diff, history, info, and normal terminal outputs to prevent accidental leakage in screenshots and terminal logs.
+4. **Git Protection**: Project initialization updates `.gitignore` to prevent committing `.env` files and sensitive configurations.
 
-## Security Note
+---
 
-DevVault is currently a local learning project and is **not intended to be a production-grade secrets manager**.
+## License
 
-Configuration values are stored in a local JSON file. Do not use DevVault to store highly sensitive production credentials or secrets.
-
-When listing configuration, DevVault displays keys rather than their values.
+This project is licensed under the MIT License.
