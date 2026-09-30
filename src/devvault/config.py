@@ -10,6 +10,41 @@ from devvault.storage import (
 )
 
 
+def validate_key(key: str) -> None:
+    """Validate that a configuration key follows naming rules."""
+    if not key:
+        raise ValueError("Configuration key cannot be empty.")
+
+    if not (key[0].isalpha() or key[0] == "_"):
+        raise ValueError("Configuration key must start with a letter or underscore.")
+
+    if not key.replace("_", "").isalnum():
+        raise ValueError(
+            "Configuration key can only contain letters, numbers, and underscores."
+        )
+
+
+def parse_value(value: str) -> bool | int | float | str:
+    """Parse a string representation into typed primitive value."""
+    if value.lower() == "true":
+        return True
+
+    if value.lower() == "false":
+        return False
+
+    try:
+        return int(value)
+    except ValueError:
+        pass
+
+    try:
+        return float(value)
+    except ValueError:
+        pass
+
+    return value
+
+
 def initialize_config(config_file: Path | None = None) -> None:
     if config_file is None:
         config_file = get_config_file()

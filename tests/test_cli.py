@@ -129,6 +129,33 @@ def test_export_command(tmp_path, monkeypatch, capsys):
     assert capsys.readouterr().out == f"Exported configuration to {dev_output_file}.\n"
 
 
+def test_import_command(tmp_path, monkeypatch, capsys):
+    env_file = tmp_path / ".env"
+
+    monkeypatch.setattr(
+        cli,
+        "import_env_file",
+        lambda file_path, profile=None, force=False: ("default", 3, 0),
+    )
+
+    cli.import_command(env_file, force=False)
+    assert (
+        capsys.readouterr().out
+        == "Imported 3 configuration entries into profile 'default'.\n"
+    )
+
+    monkeypatch.setattr(
+        cli,
+        "import_env_file",
+        lambda file_path, profile=None, force=False: ("staging", 2, 1),
+    )
+
+    cli.import_command(env_file, force=False, profile="staging")
+    out = capsys.readouterr().out
+    assert "Imported 2 configuration entries into profile 'staging'." in out
+    assert "Skipped 1 existing entries." in out
+
+
 def test_info_command(monkeypatch, capsys):
     monkeypatch.setattr(
         cli,

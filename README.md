@@ -12,6 +12,7 @@ It is a learning project focused on practicing modern Python project development
 - Get configuration values
 - List configuration keys
 - Remove configuration values
+- Import configuration from `.env` files with duplicate protection
 - Export configuration to a `.env` file
 - Display project and profile information
 - Display the application version
@@ -166,6 +167,44 @@ devvault remove DEBUG
 devvault remove DEBUG --profile staging
 ```
 
+#### Import configuration
+
+Import configuration from a `.env` file into the active profile:
+
+```bash
+devvault import .env
+```
+
+Import into a specific profile:
+
+```bash
+devvault import .env.staging --profile staging
+```
+
+##### Supported `.env` Syntax
+- `KEY=value`
+- `KEY="value"` (double quotes)
+- `KEY='value'` (single quotes)
+- Comment lines beginning with `#`
+- Blank lines and whitespace
+
+##### Duplicate Key Handling
+By default, DevVault will **never silently overwrite** existing keys. If an imported key already exists in the target profile, DevVault skips it and reports the count:
+
+```text
+Imported 2 configuration entries into profile 'dev'.
+Skipped 1 existing entries.
+```
+
+To explicitly allow overwriting existing keys, use `--force`:
+
+```bash
+devvault import .env --force
+```
+
+##### Security Considerations
+DevVault never displays the contents or values of imported configuration entries during the import process to avoid leaking sensitive information into console logs.
+
 #### Export configuration
 
 Export configuration to a `.env` file:
@@ -195,6 +234,7 @@ devvault --help
 devvault profile --help
 devvault set --help
 devvault get --help
+devvault import --help
 devvault export --help
 ```
 
@@ -218,12 +258,14 @@ devvault/
 │       ├── __main__.py
 │       ├── cli.py
 │       ├── config.py
+│       ├── importer.py
 │       ├── profiles.py
 │       ├── storage.py
 │       └── exceptions.py
 └── tests/
     ├── test_cli.py
     ├── test_config.py
+    ├── test_importer.py
     └── test_profiles.py
 ```
 

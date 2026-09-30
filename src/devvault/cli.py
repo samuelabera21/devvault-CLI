@@ -6,10 +6,13 @@ from devvault.config import (
     get_config,
     initialize_config,
     list_config,
+    parse_value,
     remove_config,
     set_config,
+    validate_key,
 )
 from devvault.exceptions import ConfigKeyNotFoundError, DevVaultError
+from devvault.importer import import_env_file
 from devvault.profiles import (
     create_profile,
     delete_profile,
@@ -28,39 +31,6 @@ def init_command() -> None:
 def list_command(profile: str | None = None) -> None:
     for key in list_config(profile=profile):
         print(key)
-
-
-def validate_key(key: str) -> None:
-    if not key:
-        raise ValueError("Configuration key cannot be empty.")
-
-    if not (key[0].isalpha() or key[0] == "_"):
-        raise ValueError("Configuration key must start with a letter or underscore.")
-
-    if not key.replace("_", "").isalnum():
-        raise ValueError(
-            "Configuration key can only contain letters, numbers, and underscores."
-        )
-
-
-def parse_value(value: str) -> bool | int | float | str:
-    if value.lower() == "true":
-        return True
-
-    if value.lower() == "false":
-        return False
-
-    try:
-        return int(value)
-    except ValueError:
-        pass
-
-    try:
-        return float(value)
-    except ValueError:
-        pass
-
-    return value
 
 
 def set_command(key: str, value: str, profile: str | None = None) -> None:
@@ -100,6 +70,18 @@ def export_command(file: str | Path, force: bool, profile: str | None = None) ->
             env_file.write(f"{key}={value}\n")
 
     print(f"Exported configuration to {file}.")
+
+
+def import_command(file: str | Path, force: bool, profile: str | None = None) -> None:
+    target_profile, imported_count, skipped_count = import_env_file(
+        file_path=file, profile=profile, force=force
+    )
+    print(
+        f"Imported {imported_count} configuration entries "
+        f"into profile '{target_profile}'."
+    )
+    if skipped_count > 0:
+        print(f"Skipped {skipped_count} existing entries.")
 
 
 def info_command(profile: str | None = None) -> None:
@@ -199,6 +181,18 @@ def main() -> None:
     export_parser.add_argument("--profile", help="Configuration profile to use")
     export_parser.set_defaults(func=export_command)
 
+    import_parser = subparsers.add_parser(
+        "import", help="Import configuration from a dotenv file"
+    )
+    import_parser.add_argument("file", help="Path to dotenv file")
+    import_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing configuration keys",
+    )
+    import_parser.add_argument("--profile", help="Configuration profile to use")
+    import_parser.set_defaults(func=import_command)
+
     info_parser = subparsers.add_parser("info", help="Display project information")
     info_parser.add_argument("--profile", help="Configuration profile to inspect")
     info_parser.set_defaults(func=info_command)
@@ -238,6 +232,8 @@ def main() -> None:
         elif args.command == "list":
             run_command(args.func, profile=args.profile)
         elif args.command == "export":
+            run_command(args.func, args.file, args.force, profile=args.profile)
+        elif args.command == "import":
             run_command(args.func, args.file, args.force, profile=args.profile)
         elif args.command == "info":
             run_command(args.func, profile=args.profile)
