@@ -12,6 +12,7 @@ from devvault.config import (
     validate_key,
 )
 from devvault.exceptions import ConfigKeyNotFoundError, DevVaultError
+from devvault.exporter import export_env_file
 from devvault.importer import import_env_file
 from devvault.profiles import (
     create_profile,
@@ -57,19 +58,10 @@ def remove_command(key: str, profile: str | None = None) -> None:
 
 
 def export_command(file: str | Path, force: bool, profile: str | None = None) -> None:
-    config = load_config()
-    _, profile_data = _resolve_profile(config, profile)
-
-    output_file = Path(file)
-
-    if output_file.exists() and not force:
-        raise FileExistsError(f"File '{file}' already exists.")
-
-    with output_file.open("w", encoding="utf-8") as env_file:
-        for key, value in profile_data.items():
-            env_file.write(f"{key}={value}\n")
-
-    print(f"Exported configuration to {file}.")
+    target_profile, count = export_env_file(
+        file_path=file, profile=profile, force=force
+    )
+    print(f"Exported {count} configuration entries to '{file}'.")
 
 
 def import_command(file: str | Path, force: bool, profile: str | None = None) -> None:
@@ -172,13 +164,18 @@ def main() -> None:
     remove_parser.set_defaults(func=remove_command)
 
     export_parser = subparsers.add_parser(
-        "export", help="Export configuration to a file"
+        "export", help="Export configuration to a dotenv file"
     )
-    export_parser.add_argument("file", help="Destination file path")
+    export_parser.add_argument("file", help="Destination dotenv file path")
     export_parser.add_argument(
-        "--force", action="store_true", help="Overwrite existing file"
+        "--force",
+        action="store_true",
+        help="Overwrite existing destination file",
     )
-    export_parser.add_argument("--profile", help="Configuration profile to use")
+    export_parser.add_argument(
+        "--profile",
+        help="Configuration profile to export (defaults to active profile)",
+    )
     export_parser.set_defaults(func=export_command)
 
     import_parser = subparsers.add_parser(

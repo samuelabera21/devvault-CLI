@@ -13,7 +13,7 @@ It is a learning project focused on practicing modern Python project development
 - List configuration keys
 - Remove configuration values
 - Import configuration from `.env` files with duplicate protection
-- Export configuration to a `.env` file
+- Export configuration to a `.env` file with overwrite safety and value quoting
 - Display project and profile information
 - Display the application version
 - Command-line help
@@ -202,22 +202,45 @@ To explicitly allow overwriting existing keys, use `--force`:
 devvault import .env --force
 ```
 
-##### Security Considerations
-DevVault never displays the contents or values of imported configuration entries during the import process to avoid leaking sensitive information into console logs.
-
 #### Export configuration
 
-Export configuration to a `.env` file:
+Export configuration from the active profile to a `.env` file:
 
 ```bash
 devvault export .env
+```
+
+Export configuration from a specific profile:
+
+```bash
 devvault export .env.staging --profile staging
 ```
 
-To overwrite an existing file:
+##### Overwrite Protection
+DevVault **never silently overwrites** an existing file. If the target file already exists, DevVault refuses to overwrite it and prompts you to provide `--force`:
+
+```text
+Error: File '.env' already exists. Use --force to overwrite.
+```
+
+To explicitly allow overwriting:
 
 ```bash
 devvault export .env --force
+```
+
+##### Serialization and Quoting
+DevVault safely serializes all stored data types to dotenv format:
+- Booleans are exported as lowercase `true` / `false`.
+- Numbers (integers, floats) are exported as numeric literals.
+- Strings containing spaces, special characters (`#`, `=`, etc.), or empty strings are automatically quoted.
+- Exported `.env` files can be cleanly imported back via `devvault import`.
+
+##### Security Considerations
+DevVault never displays exported values or secrets in console logs or command output. It outputs a summary count of exported entries:
+
+```text
+Exported 3 configuration entries to '.env'.
 ```
 
 #### Display project information
@@ -258,6 +281,7 @@ devvault/
 │       ├── __main__.py
 │       ├── cli.py
 │       ├── config.py
+│       ├── exporter.py
 │       ├── importer.py
 │       ├── profiles.py
 │       ├── storage.py
@@ -265,6 +289,7 @@ devvault/
 └── tests/
     ├── test_cli.py
     ├── test_config.py
+    ├── test_exporter.py
     ├── test_importer.py
     └── test_profiles.py
 ```

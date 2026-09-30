@@ -109,24 +109,27 @@ def test_export_command(tmp_path, monkeypatch, capsys):
 
     monkeypatch.setattr(
         cli,
-        "load_config",
-        lambda: {
-            "active_profile": "default",
-            "profiles": {
-                "default": {"NAME": "Samuel", "DEBUG": True},
-                "dev": {"DB_HOST": "localhost"},
-            },
-        },
+        "export_env_file",
+        lambda file_path, profile=None, force=False: ("default", 2),
     )
 
     cli.export_command(output_file, False)
-    assert output_file.read_text(encoding="utf-8") == "NAME=Samuel\nDEBUG=True\n"
-    assert capsys.readouterr().out == f"Exported configuration to {output_file}.\n"
+    assert (
+        capsys.readouterr().out
+        == f"Exported 2 configuration entries to '{output_file}'.\n"
+    )
 
-    dev_output_file = tmp_path / "dev.env"
-    cli.export_command(dev_output_file, False, profile="dev")
-    assert dev_output_file.read_text(encoding="utf-8") == "DB_HOST=localhost\n"
-    assert capsys.readouterr().out == f"Exported configuration to {dev_output_file}.\n"
+    monkeypatch.setattr(
+        cli,
+        "export_env_file",
+        lambda file_path, profile=None, force=False: ("staging", 1),
+    )
+
+    cli.export_command(output_file, True, profile="staging")
+    assert (
+        capsys.readouterr().out
+        == f"Exported 1 configuration entries to '{output_file}'.\n"
+    )
 
 
 def test_import_command(tmp_path, monkeypatch, capsys):
