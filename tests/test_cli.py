@@ -179,13 +179,18 @@ def test_info_command(monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "load_config",
-        lambda: {
+        lambda *args, **kwargs: {
             "active_profile": "default",
             "profiles": {
                 "default": {"values": {"KEY1": "VAL1"}, "secrets": {}},
                 "dev": {"values": {"KEY2": "VAL2", "KEY3": "VAL3"}, "secrets": {}},
             },
         },
+    )
+    monkeypatch.setattr(
+        cli,
+        "get_vault_status",
+        lambda *args, **kwargs: {"initialized": False, "unlocked": False},
     )
 
     cli.info_command()

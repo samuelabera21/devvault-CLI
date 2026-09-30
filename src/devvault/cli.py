@@ -124,11 +124,11 @@ def import_command(
 
 def info_command(profile: str | None = None, as_json: bool = False) -> None:
     config_file = get_config_file()
-    config = load_config()
+    config = load_config(config_file)
     active_profile = config.get("active_profile", DEFAULT_PROFILE)
     profiles = config.get("profiles", {})
     _, profile_data = _resolve_profile(config, profile)
-    vault_status = get_vault_status()
+    vault_status = get_vault_status(config_file)
 
     values_count = len(profile_data.get("values", {}))
     secrets_count = len(profile_data.get("secrets", {}))
@@ -358,7 +358,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version",
         action="version",
-        version="DevVault 0.2.1",
+        version="DevVault 0.2.2",
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Enable verbose debug output"

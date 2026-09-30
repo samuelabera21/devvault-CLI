@@ -116,9 +116,12 @@ def lock_vault() -> None:
 
 def get_vault_status(config_file: Path | None = None) -> dict[str, bool]:
     """Get the current vault initialization and lock status."""
-    config = load_config(config_file)
-    vault_data = config.get("vault", {})
-    initialized = bool(vault_data.get("initialized", False))
+    try:
+        config = load_config(config_file)
+        vault_data = config.get("vault", {})
+        initialized = bool(vault_data.get("initialized", False))
+    except FileNotFoundError:
+        initialized = False
     unlocked = bool(get_session_key() is not None)
     return {
         "initialized": initialized,
