@@ -358,7 +358,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version",
         action="version",
-        version="DevVault 0.2.0",
+        version="DevVault 0.2.1",
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Enable verbose debug output"
