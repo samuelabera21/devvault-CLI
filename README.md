@@ -1,4 +1,4 @@
-live on Pip 
+live on Pip https://pypi.org/project/samuel-devvault/
 
 live link: https://devvault2.netlify.app/
 
