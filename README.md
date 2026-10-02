@@ -1,4 +1,4 @@
-livepackage: https://pypi.org/project/samuel-devvault/
+live package: https://pypi.org/project/samuel-devvault/
 
 live link: https://devvault2.netlify.app/
 
