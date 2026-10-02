@@ -1,3 +1,7 @@
+live on Pip 
+
+live link: https://devvault2.netlify.app/
+
 # DevVault
 
 DevVault is a modern local developer configuration and secrets management CLI written in Python.
